@@ -1,6 +1,5 @@
-//Omar and Alex worked on Step 0 to Step 5
+//Omar and Alex worked on Step 0 to Step 6 equally 
 
-// Alex and Omar did step 1-6 method, beofre doing 1 having that work, and so on 
 
 void printChar(char);
 void printString(char*);
@@ -16,6 +15,7 @@ void writeFile(char*, char*, int);
 void makeTimerInterrupt();
 void handleTimerInterrupt(int segment, int sp);
 void returnFromTimer(int segment, int sp);
+void initializeProgram(int segment); // step 3
 
 //print string cant be used to debug now in kernel, becuase its inaccesible when it goes to kernel, when we call it back it is still inaccesable nov 10:
 //use printChar instead this works because its only putting a value not an adress for that value
@@ -46,6 +46,7 @@ void main() {
         interrupt(0x21, 0,"messag not found in this sector\r\n",0,0);
 */
     makeInterrupt21();
+    //init process table here
     makeTimerInterrupt();
     //interrupt(0x21,8,"this is a test message","testmg",3);
     interrupt(0x21,4,"shell",0,0);
@@ -220,7 +221,9 @@ void executeProgram(char*name){
     	    i++;
 	
   }
-    launchProgram(segment);
+  	//step 3
+    //launchProgram(segment);
+    //initializeProgram(segment);
 
 }
 
@@ -300,15 +303,10 @@ void handleTimerInterrupt(int segment, int sp){
 	printChar('T');
 	printChar('I');
 	printChar('C');
-	
-	
+	returnFromTimer(segment,sp);
 }
 
-void returnFromTimer(int segment, int sp){
-	printChar('T');
-	printChar('I');
-	printChar('C');
 
 
 
-}
+
