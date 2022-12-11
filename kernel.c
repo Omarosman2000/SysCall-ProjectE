@@ -17,6 +17,13 @@ void handleTimerInterrupt(int segment, int sp);
 void returnFromTimer(int segment, int sp);
 void initializeProgram(int segment); // step 3
 
+
+int processActive[8];//step 2 
+int processStackPointer[8];//step 2
+int currentProcess;//step 2, keep track of whats running currently
+
+//Thus, given a table entry, you can find the segment by adding two and multiplying by 0x1000.
+
 //print string cant be used to debug now in kernel, becuase its inaccesible when it goes to kernel, when we call it back it is still inaccesable nov 10:
 //use printChar instead this works because its only putting a value not an adress for that value
 void main() {
@@ -46,7 +53,9 @@ void main() {
         interrupt(0x21, 0,"messag not found in this sector\r\n",0,0);
 */
     makeInterrupt21();
-    //init process table here
+    processActive=0;
+    processStackPointer=0xff00;//where stacks start
+    currentProcess=-1;//no user processes yet, so set to -1
     makeTimerInterrupt();
     //interrupt(0x21,8,"this is a test message","testmg",3);
     interrupt(0x21,4,"shell",0,0);
@@ -300,12 +309,11 @@ void deleteFile(char* filename){
 
 
 void handleTimerInterrupt(int segment, int sp){
-	printChar('T');
-	printChar('I');
-	printChar('C');
+	//printChar('T');
+	//printChar('I');
+	//printChar('C');
 	returnFromTimer(segment,sp);
 }
-
 
 
 
