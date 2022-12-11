@@ -220,22 +220,33 @@ break;
 
 }
 
-void executeProgram(char*name){
-       char buffer[13312];
-        int i=0;
-        int segment =0x2000;
-           readFile(name,buffer);
-        while(i<13312){
-     	    putInMemory(segment,i,buffer[i]);
-    	    i++;
+//void executeProgram(char*name){
+ //      char buffer[13312];
+  //      int i=0;
+    //    int segment =0x2000;
+      //     readFile(name,buffer);
+        //while(i<13312){
+     	  //  putInMemory(segment,i,buffer[i]);
+    	    //i++;
 	
-  }
+  //}
   	//step 3
     //launchProgram(segment);
-    //initializeProgram(segment);
+    
 
 }
 
+void executeProgram(char* name){ //new executeProgram
+    readFile(name,buffer);//step 1: read file into buffer
+    //step through processAvtive array looking for free entry
+    //determine segment,take entry add 2 *0x1000
+    putInMemory(segment,i,buffer[i]);//copy buffer into segment with putInMemory
+    intitializeProgram(segment);//call init program
+    processActive=1;//set process active to 1 step 6
+    processStackPointer=0xff00; //set stack pointer to 0xff00: step 6
+    
+    
+}
 void terminate(){
 
 	char shellname[6];
@@ -312,6 +323,7 @@ void handleTimerInterrupt(int segment, int sp){
 	//printChar('T');
 	//printChar('I');
 	//printChar('C');
+    dataseg=setKernelDataSegment
 	returnFromTimer(segment,sp);
 }
 
