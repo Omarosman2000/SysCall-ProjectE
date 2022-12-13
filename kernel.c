@@ -20,46 +20,24 @@ void initializeProgram(int segment); // step 3
 
 int processActive[8];//step 2 
 int processStackPointer[8];//step 2
-int currentProcess;//step 2, keep track of whats running currently
+int currentProcess = -1;
+int i;
+int dataseg; // when we put it here, in the global variables we were able to compile it
+int entry;
+int segment;
 
-//Thus, given a table entry, you can find the segment by adding two and multiplying by 0x1000.
-
-//print string cant be used to debug now in kernel, becuase its inaccesible when it goes to kernel, when we call it back it is still inaccesable nov 10:
-//use printChar instead this works because its only putting a value not an adress for that value
 void main() {
-    /*char line[80];
-    char buffer[13312];
-    int sectorsRead;
-    printString("what file: \0");
-    readString(line);
-    printString(line);
-    readSector(buffer, 30);
-    printString(buffer);
-    readFile("messag", buffer,&sectorsRead);
-    printString(buffer);
-    makeInterrupt21();
-    //interrupt(0x21, 4, "tstpr1", 0, 0);
-    //interrupt(0x21, 4, "tstpr2", 0, 0);
-    
-    
-    handleInterrupt21(0x21, 0,0,0,0);
-    interrupt(0x21,0,line,0,0);
-    interrupt(0x21,1,line,0,0);
-    //printString("Hello \0");
-    interrupt(0x21,3,"messag",buffer, &sectorsRead);  // read the file into buffer
-    if(sectorsRead>0)
-      interrupt(0x21,0,buffer,0,0);  //print out the file
-    else
-        interrupt(0x21, 0,"messag not found in this sector\r\n",0,0);
-*/
-    makeInterrupt21();
-    processActive=0;
-    processStackPointer=0xff00;//where stacks start
-    currentProcess=-1;//no user processes yet, so set to -1
-    makeTimerInterrupt();
-    //interrupt(0x21,8,"this is a test message","testmg",3);
-    interrupt(0x21,4,"shell",0,0);
-    while(1);
+  
+    makeInterrupt21();    
+
+	for(i=0; i<8; i++){
+		processActive[i]=0;
+		processStackPointer[i]=0xff00;
+	}
+ 	
+    	makeTimerInterrupt();
+    	interrupt(0x21,4,"shell",0,0);
+    	while(1);
 
 }
 
@@ -220,33 +198,65 @@ break;
 
 }
 
-//void executeProgram(char*name){
- //      char buffer[13312];
-  //      int i=0;
-    //    int segment =0x2000;
-      //     readFile(name,buffer);
-        //while(i<13312){
-     	  //  putInMemory(segment,i,buffer[i]);
-    	    //i++;
+/*void executeProgram(char*name){
+       char buffer[13312];
+        int i=0;
+        int segment =0x2000;
+           readFile(name,buffer);
+        while(i<13312){
+     	    putInMemory(segment,i,buffer[i]);
+    	    i++;
 	
-  //}
+  }
   	//step 3
-    //launchProgram(segment);
+    launchProgram(segment);
     
 
+*/
+
+void executeProgram(char* name){
+	// read file into buffer
+	char buffer[13312];
+	readFile(name, buffer);
+	
+	//find free entry in process table
+	
+	//int dataseg;
+	//int entry;
+	dataseg =setKernelDataSegment();
+	for(entry =0; entry <8; entry++){
+		if(processActive[entry] ==0){
+			break;
+		}
+	}
+	
+	restoreDataSegment(dataseg);
+	
+	//calculate segment number
+	
+	segment =(entry +2) *0x1000;
+	
+	//copy program into segment
+	
+	putInMemory(segment, 0, buffer);
+	
+	//initialize program
+	
+	initializeProgram(segment);
+	
+	//mark process as active
+	
+	dataseg =setKernelDataSegment();
+	processActive[entry] =1;
+	processStackPointer[entry] =0xff00;
+	restoreDataSegment(dataseg);
+	
 }
 
-void executeProgram(char* name){ //new executeProgram
-    readFile(name,buffer);//step 1: read file into buffer
-    //step through processAvtive array looking for free entry
-    //determine segment,take entry add 2 *0x1000
-    putInMemory(segment,i,buffer[i]);//copy buffer into segment with putInMemory
-    intitializeProgram(segment);//call init program
-    processActive=1;//set process active to 1 step 6
-    processStackPointer=0xff00; //set stack pointer to 0xff00: step 6
-    
-    
-}
+
+
+
+
 void terminate(){
 
 	char shellname[6];
@@ -323,10 +333,6 @@ void handleTimerInterrupt(int segment, int sp){
 	//printChar('T');
 	//printChar('I');
 	//printChar('C');
-    dataseg=setKernelDataSegment
+    	//dataseg=setKernelDataSegment
 	returnFromTimer(segment,sp);
 }
-
-
-
-
