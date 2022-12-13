@@ -1,4 +1,4 @@
-//Omar and Alex worked on Step 1 to Step 5 equally! 
+//Omar and Alex worked on Step 0 to Step 6 equally 
 
 
 void printChar(char);
@@ -29,13 +29,13 @@ int segment;
 void main() {
   
     //makeInterrupt21();    
-
+	makeTimerInterrupt();
 	for(i=0; i<8; i++){
 		processActive[i]=0;
 		processStackPointer[i]=0xff00;
 	}
  	
-    	makeTimerInterrupt();
+    	
     	interrupt(0x21,4,"shell",0,0);
     	while(1);
 
@@ -258,7 +258,7 @@ void executeProgram(char* name){
 
 
 void terminate(){
-
+	
 	char shellname[6];
 	shellname[0]= 's';
 	shellname[1] = 'h';
@@ -267,7 +267,11 @@ void terminate(){
 	shellname[4]='l';
 	shellname[5]='\0';
 	executeProgram(shellname);
-    
+	
+	setKernelDataSegment();
+	processActive[entry] =0;
+    	
+    	while(1);
 }    
 void writeSector(char* buffer, int sector){
    int AX = 3*256 +1;
@@ -333,9 +337,9 @@ void handleTimerInterrupt(int segment, int sp){
 	//printChar('T');
 	//printChar('I');
 	//printChar('C');
-    	//dataseg=setKernelDataSegment
+    //dataseg=setKernelDataSegment;
     	
-    int dataseg;
+
 
     // save stack pointer for current process
     dataseg = setKernelDataSegment();
@@ -356,5 +360,3 @@ void handleTimerInterrupt(int segment, int sp){
     restoreDataSegment(dataseg);
     returnFromTimer(segment, sp);
 }
-
-
