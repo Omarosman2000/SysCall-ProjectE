@@ -1,4 +1,4 @@
-//Omar and Alex worked on Step 1 to Step 5 equally 
+//Omar and Alex worked on Step 0 to Step 6 equally 
 
 
 void printChar(char);
@@ -16,26 +16,28 @@ void makeTimerInterrupt();
 void handleTimerInterrupt(int segment, int sp);
 void returnFromTimer(int segment, int sp);
 void initializeProgram(int segment); // step 3
+void killProcess(int processId);//step 6
 
 
 int processActive[8];//step 2 
 int processStackPointer[8];//step 2
 int currentProcess = -1;
 int i;
-int dataseg; // when we put it here, in the global variables we were able to compile it
+int dataseg; // when we put it here, in the global variables we were able to compile it, when we did it in the void method it didnt compile
 int entry;
 int segment;
+
 
 void main() {
   
     //makeInterrupt21();    
-	makeTimerInterrupt();
+	
 	for(i=0; i<8; i++){
 		processActive[i]=0;
 		processStackPointer[i]=0xff00;
 	}
  	
-    	
+    	makeTimerInterrupt();
     	interrupt(0x21,4,"shell",0,0);
     	while(1);
 
@@ -141,10 +143,13 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 
    else if(ax==8){
   	writeFile(bx,cx,dx);
+   }	
+   else if(ax==9){
+   	killProcess(bx);
     }
    else{
 
-    printString("An error occurred when ax>8"); // terminating the prgram
+    printString("An error occurred when ax>9"); // terminating the prgram
     }
     
 }
@@ -221,16 +226,15 @@ void executeProgram(char* name){
 	
 	//find free entry in process table
 	
-	//int dataseg;
-	//int entry;
-	dataseg =setKernelDataSegment();
+
+	//dataseg =setKernelDataSegment();
 	for(entry =0; entry <8; entry++){
 		if(processActive[entry] ==0){
 			break;
 		}
 	}
 	
-	restoreDataSegment(dataseg);
+	//restoreDataSegment(dataseg);
 	
 	//calculate segment number
 	
@@ -238,7 +242,7 @@ void executeProgram(char* name){
 	
 	//copy program into segment
 	
-	putInMemory(segment, 0, buffer);
+	putInMemory(segment, 0x00, buffer);
 	
 	//initialize program
 	
@@ -252,9 +256,6 @@ void executeProgram(char* name){
 	restoreDataSegment(dataseg);
 	
 }
-
-
-
 
 
 void terminate(){
@@ -343,6 +344,16 @@ void handleTimerInterrupt(int segment, int sp){
 
     // save stack pointer for current process
     dataseg = setKernelDataSegment();
+    for(i=0; i<8; i++)
+        {
+                putInMemory(0xb800,60*2+i*4,i+0x30);
+                if(processActive[i]==1)
+                        putInMemory(0xb800,60*2+i*4+1,0x20);
+                else
+                        putInMemory(0xb800,60*2+i*4+1,0);
+        }
+
+    
     if (currentProcess != -1) {
         processStackPointer[currentProcess] = sp;
     }
@@ -359,4 +370,14 @@ void handleTimerInterrupt(int segment, int sp){
 
     restoreDataSegment(dataseg);
     returnFromTimer(segment, sp);
+}
+
+void killProcess(int processId){
+	
+	int dataseg= setKernelDataSegment();
+	
+	processActive[processId]= 0;
+	
+	restoreDataSegment(dataseg);
+
 }
