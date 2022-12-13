@@ -1,3 +1,4 @@
+void enableInterrupts();
 main()
 
 {
