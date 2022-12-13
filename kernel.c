@@ -1,4 +1,4 @@
-//Omar and Alex worked on Step 0 to Step 6 equally 
+//Omar and Alex worked on Step 1 to Step 5 equally 
 
 
 void printChar(char);
