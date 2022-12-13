@@ -1,4 +1,4 @@
-//Omar and Alex worked on Step 0 to Step 6 equally 
+//Omar and Alex worked on Step 1 to Step 6 equally 
 
 
 void printChar(char);
@@ -21,24 +21,24 @@ void killProcess(int processId);//step 6
 
 int processActive[8];//step 2 
 int processStackPointer[8];//step 2
-int currentProcess = -1;
-int i;
-int dataseg; // when we put it here, in the global variables we were able to compile it, when we did it in the void method it didnt compile
-int entry;
-int segment;
+int currentProcess;
 
 
-void main() {
+
+main() {
   
-    //makeInterrupt21();    
-	
+        
+	int i;
 	for(i=0; i<8; i++){
 		processActive[i]=0;
 		processStackPointer[i]=0xff00;
 	}
  	
-    	makeTimerInterrupt();
+    	
+    	makeInterrupt21();
+    	
     	interrupt(0x21,4,"shell",0,0);
+    	makeTimerInterrupt();
     	while(1);
 
 }
@@ -220,6 +220,10 @@ break;
 */
 
 void executeProgram(char* name){
+	int entry;
+	int segment;
+	int dataseg;
+	int i=0;
 	// read file into buffer
 	char buffer[13312];
 	readFile(name, buffer);
@@ -227,14 +231,14 @@ void executeProgram(char* name){
 	//find free entry in process table
 	
 
-	//dataseg =setKernelDataSegment();
+	dataseg =setKernelDataSegment();
 	for(entry =0; entry <8; entry++){
 		if(processActive[entry] ==0){
 			break;
 		}
 	}
 	
-	//restoreDataSegment(dataseg);
+	restoreDataSegment(dataseg);
 	
 	//calculate segment number
 	
@@ -242,11 +246,16 @@ void executeProgram(char* name){
 	
 	//copy program into segment
 	
-	putInMemory(segment, 0x00, buffer);
+	while(i<13312){
+     	    putInMemory(segment,i,buffer[i]);
+    	    i++;
+	
+  }
 	
 	//initialize program
 	
 	initializeProgram(segment);
+
 	
 	//mark process as active
 	
@@ -259,7 +268,7 @@ void executeProgram(char* name){
 
 
 void terminate(){
-	
+	int entry;
 	char shellname[6];
 	shellname[0]= 's';
 	shellname[1] = 'h';
@@ -267,10 +276,10 @@ void terminate(){
 	shellname[3]='l';
 	shellname[4]='l';
 	shellname[5]='\0';
-	executeProgram(shellname);
+	//executeProgram(shellname);
 	
 	setKernelDataSegment();
-	processActive[entry] =0;
+	processActive[currentProcess] =0;
     	
     	while(1);
 }    
@@ -335,15 +344,19 @@ void deleteFile(char* filename){
 
 
 void handleTimerInterrupt(int segment, int sp){
+	//with these next four lines it fills screen with tic
 	//printChar('T');
 	//printChar('I');
 	//printChar('C');
-    //dataseg=setKernelDataSegment;
-    	
-
-
+	//returnFromTimer(segment,sp);
+    	//dataseg=setKernelDataSegment;
+    	//char dataseg;
+	int i=0;
+	int dataseg;
+	
     // save stack pointer for current process
-    dataseg = setKernelDataSegment();
+      dataseg = setKernelDataSegment();
+    //class code in Proj E
     for(i=0; i<8; i++)
         {
                 putInMemory(0xb800,60*2+i*4,i+0x30);
@@ -352,16 +365,17 @@ void handleTimerInterrupt(int segment, int sp){
                 else
                         putInMemory(0xb800,60*2+i*4+1,0);
         }
-
+    
     
     if (currentProcess != -1) {
         processStackPointer[currentProcess] = sp;
     }
 
     // find next active process
-    currentProcess = (currentProcess + 1) % 8;
+    currentProcess = (currentProcess + 1) & 7; //8 becuase thats how many processes we are able to do at once 
+    //int i =0;
     while (processActive[currentProcess] == 0) {
-        currentProcess = (currentProcess + 1) % 8;
+        currentProcess = (currentProcess + 1) & 7;
     }
 
     // set segment and stack pointer
