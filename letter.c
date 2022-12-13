@@ -1,3 +1,4 @@
+void enableInterrupts();
 main()
 {
 	int i,j,k=1,l;
