@@ -1,4 +1,4 @@
-//Omar and Alex worked on Step 0 to Step 6 equally 
+//Omar and Alex worked on Step 1 to Step 5 equally! 
 
 
 void printChar(char);
@@ -28,7 +28,7 @@ int segment;
 
 void main() {
   
-    makeInterrupt21();    
+    //makeInterrupt21();    
 
 	for(i=0; i<8; i++){
 		processActive[i]=0;
@@ -334,5 +334,27 @@ void handleTimerInterrupt(int segment, int sp){
 	//printChar('I');
 	//printChar('C');
     	//dataseg=setKernelDataSegment
-	returnFromTimer(segment,sp);
+    	
+    int dataseg;
+
+    // save stack pointer for current process
+    dataseg = setKernelDataSegment();
+    if (currentProcess != -1) {
+        processStackPointer[currentProcess] = sp;
+    }
+
+    // find next active process
+    currentProcess = (currentProcess + 1) % 8;
+    while (processActive[currentProcess] == 0) {
+        currentProcess = (currentProcess + 1) % 8;
+    }
+
+    // set segment and stack pointer
+    segment = (currentProcess + 2) * 0x1000;
+    sp = processStackPointer[currentProcess];
+
+    restoreDataSegment(dataseg);
+    returnFromTimer(segment, sp);
 }
+
+
